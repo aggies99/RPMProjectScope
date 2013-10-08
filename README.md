@@ -1,9 +1,9 @@
-RPM Project Scope
-===============
-Creates a scope document from Rally Portfolio Manager using the list of Epics in the current view.
+Random App Name16498
+=========================
 
-Rally Portfolio Manager structure
----------------------------------
-Epic = Project or Release
-MMF = Scope
-Feature = Testable set of scope
+## Overview
+
+
+## License
+
+AppTemplate is released under the MIT license.  See the file [LICENSE](https://raw.github.com/RallyApps/AppTemplate/master/LICENSE) for the full text.
