@@ -1,3 +1,22 @@
 .app {
      /* Add app styles here */
 }
+
+.inner {
+    padding: 10px;
+}
+
+.program {
+    float: left;
+    width: 100%;
+}
+
+.scope {
+    float: left;
+    width: 100%;
+}
+
+.feature {
+    float: left;
+    width: 100%;
+}
