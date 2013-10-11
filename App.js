@@ -122,7 +122,7 @@ Ext.define('CustomApp', {
         
         MyApp.programName = Ext.create('Ext.panel.Panel', {
             width: '100%',
-            html: '<p><h1><a href=\'' + Rally.nav.Manager.getDetailUrl( records[0] ) + '\'>' + title + '</a></h1></p>',
+            html: '<p><h1><a href=\'' + Rally.nav.Manager.getDetailUrl( records[0] ) + '\' target=\'_top\'>' + title + '</a></h1></p>',
             renderTo: Ext.getBody()
         });
 
@@ -244,7 +244,7 @@ Ext.define('CustomApp', {
 
         thisDetail = Ext.create('Rally.ui.grid.Grid', {
             store: myStore,
-            title: '<a href=\'' + Rally.nav.Manager.getDetailUrl( records[0] ) + '\'>' + title + '</a>',
+            title: '<a href=\'' + Rally.nav.Manager.getDetailUrl( records[0] ) + '\' target=\'_top\'>' + title + '</a>',
             border: 1,
             columnCfgs: [
                 {dataIndex: 'c_SAPProjectNumber', text:'SAP #'},
@@ -323,7 +323,7 @@ Ext.define('CustomApp', {
         thisDetail = Ext.create('Rally.ui.grid.Grid', {
             store: myStore,
             border: 1,
-            title: '<a href=\'' + Rally.nav.Manager.getDetailUrl( records[0] ) + '\'>' + title + '</a>',
+            title: '<a href=\'' + Rally.nav.Manager.getDetailUrl( records[0] ) + '\' target=\'_top\'>' + title + '</a>',
             columnCfgs: [
                 'PreliminaryEstimate',
                 'ValueScore',
