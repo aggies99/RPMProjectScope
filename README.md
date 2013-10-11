@@ -1,8 +1,9 @@
-Random App Name16498
+RPM Project Scope
 =========================
 
 ## Overview
 
+This app creates a program charter document based on an Epic/MMF/Feature structure.
 
 ## License
 
