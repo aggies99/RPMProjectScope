@@ -35,7 +35,7 @@ Ext.define('CustomApp', {
             
             context: MyApp.globalContext,
             
-            fetch: ['Name' ],
+            //fetch: ['Name' ],
                 
             sorters: {
                 property: 'Name',
@@ -44,6 +44,7 @@ Ext.define('CustomApp', {
             
             listeners: {
                 load: function( store, records ) {
+                    console.log( store );
                     var index=0;
                     for (index=0; index<records.length; index++) {
                         MyApp.epicList.push( records[index].data.Name );
@@ -91,6 +92,7 @@ Ext.define('CustomApp', {
                     'InvestmentCategory',
                     'PlannedStartDate',
                     'PlannedEndDate',
+                    'LastUpdateDate',
                     'Description'
                     ],
                 
@@ -134,7 +136,8 @@ Ext.define('CustomApp', {
                 {dataIndex: 'c_SAPProjectNumber', text:'SAP #'},
                 'InvestmentCategory',
                 'PlannedStartDate',
-                'PlannedEndDate'
+                'PlannedEndDate',
+                'LastUpdateDate'
             ],
             showPagingToolbar: false            
         });
@@ -181,6 +184,7 @@ Ext.define('CustomApp', {
                     'InvestmentCategory',
                     'PlannedStartDate',
                     'PlannedEndDate',
+                    'LastUpdateDate',
                     'Description'
                     ],
                 
@@ -253,6 +257,7 @@ Ext.define('CustomApp', {
                 'InvestmentCategory',
                 'PlannedStartDate',
                 'PlannedEndDate',
+                'LastUpdateDate',
                 'Project'
             ],
             showPagingToolbar: false            
@@ -280,9 +285,9 @@ Ext.define('CustomApp', {
                     'PreliminaryEstimate',
                     'ValueScore',
                     'RiskScore',
+                    'LastUpdateDate',
                     'Description',
                     'Release'
-
                 ],
                 
             filters: [
@@ -333,6 +338,7 @@ Ext.define('CustomApp', {
                 'ValueScore',
                 'RiskScore',
                 'Project',
+                'LastUpdateDate',
                 'Release'
             ],
             showPagingToolbar: false            
