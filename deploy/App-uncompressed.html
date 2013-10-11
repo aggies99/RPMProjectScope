@@ -44,7 +44,7 @@
             
             context: MyApp.globalContext,
             
-            fetch: ['Name' ],
+            //fetch: ['Name' ],
                 
             sorters: {
                 property: 'Name',
@@ -53,6 +53,7 @@
             
             listeners: {
                 load: function( store, records ) {
+                    console.log( store );
                     var index=0;
                     for (index=0; index<records.length; index++) {
                         MyApp.epicList.push( records[index].data.Name );
@@ -100,7 +101,7 @@
                     'InvestmentCategory',
                     'PlannedStartDate',
                     'PlannedEndDate',
-                    'LastModified',
+                    'LastUpdateDate',
                     'Description'
                     ],
                 
@@ -145,7 +146,7 @@
                 'InvestmentCategory',
                 'PlannedStartDate',
                 'PlannedEndDate',
-                'LastModified'
+                'LastUpdateDate'
             ],
             showPagingToolbar: false            
         });
@@ -192,7 +193,7 @@
                     'InvestmentCategory',
                     'PlannedStartDate',
                     'PlannedEndDate',
-                    'LastModified',
+                    'LastUpdateDate',
                     'Description'
                     ],
                 
@@ -265,7 +266,7 @@
                 'InvestmentCategory',
                 'PlannedStartDate',
                 'PlannedEndDate',
-                'LastModified',
+                'LastUpdateDate',
                 'Project'
             ],
             showPagingToolbar: false            
@@ -293,7 +294,7 @@
                     'PreliminaryEstimate',
                     'ValueScore',
                     'RiskScore',
-                    'LastModified',
+                    'LastUpdateDate',
                     'Description',
                     'Release'
                 ],
@@ -346,7 +347,7 @@
                 'ValueScore',
                 'RiskScore',
                 'Project',
-                'LastModified',
+                'LastUpdateDate',
                 'Release'
             ],
             showPagingToolbar: false            
