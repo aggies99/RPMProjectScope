@@ -15,11 +15,9 @@
         MyApp = this;
         
         MyApp.epicList = [];
-        MyApp.scopeDetails = [];
-        MyApp.scopeDescription = [];
-        MyApp.featureDetails = [];
-        MyApp.featureDescription = [];
-        
+        MyApp.currentScopePage = 1;
+        MyApp.currentFeaturePage = 1;
+
         MyApp.globalContext = this.getContext().getDataContext();
 
         // Load the program list and create the program combobox
@@ -44,7 +42,7 @@
             
             context: MyApp.globalContext,
             
-            //fetch: ['Name' ],
+            fetch: ['Name' ],
                 
             sorters: {
                 property: 'Name',
@@ -52,8 +50,8 @@
             },
             
             listeners: {
-                load: function( store, records ) {
-                    console.log( store );
+                load: function( myStore, records ) {
+                    //console.log( myStore );
                     var index=0;
                     for (index=0; index<records.length; index++) {
                         MyApp.epicList.push( records[index].data.Name );
@@ -125,6 +123,7 @@
     },
     
     _writeProgramDetails: function(myStore, records) {
+
         // Remove the combo box
         MyApp.programPane.remove(MyApp.combo);
 
@@ -178,8 +177,7 @@
     },
     
     _loadScopeDetails: function() {    
-        Ext.create('Rally.data.WsapiDataStore', {
-            autoLoad: true,
+        thisStore = Ext.create('Rally.data.WsapiDataStore', {
             pageSize: 1,    // Load 1 page at a time
             limit: 1,       // Limit to 1
             
@@ -211,22 +209,17 @@
             },
             
             listeners: {
-                load: function( store, records ) {
-                    MyApp._buildScopeDetails( store, records, store.currentPage-1 );
+                load: function( myStore, records ) {
+                    MyApp._buildScopeDetails( myStore, records );
                     
                     // Load the next until all pages are loaded
-                    if ( store.currentPage < store.totalCount )
+                    if ( myStore.currentPage < myStore.totalCount )
                     {
-                       store.loadPage( store.currentPage+1 );
+                        ++MyApp.currentScopePage;
+                        MyApp._loadScopeDetails();
                     }
                     else
                     {
-                        var index = 0;
-                        for (index=0; index< store.totalCount; index++ ){
-                            MyApp.scopePane.add(MyApp.scopeDetails[index]);
-                            MyApp.scopePane.add(MyApp.scopeDescription[index] );
-                        }
-
                         MyApp.featurePane = Ext.create('Ext.container.Container', {
                             componentCls: 'inner'
                         });
@@ -246,6 +239,8 @@
                 }
             }
         });
+        
+        thisStore.loadPage( MyApp.currentScopePage );
     },
     
     _buildScopeDetails: function(myStore, records) {
@@ -256,12 +251,11 @@
             title = title.substr( epicTitle.length );
         }
 
-        MyApp.scopeDetails.push( Ext.create('Rally.ui.grid.Grid', {
+        thisDetail = Ext.create('Rally.ui.grid.Grid', {
             store: myStore,
             title: '<a href=\'' + Rally.nav.Manager.getDetailUrl( records[0] ) + '\'>' + title + '</a>',
             border: 1,
             columnCfgs: [
-                'Name',
                 {dataIndex: 'c_SAPProjectNumber', text:'SAP #'},
                 'InvestmentCategory',
                 'PlannedStartDate',
@@ -270,18 +264,21 @@
                 'Project'
             ],
             showPagingToolbar: false            
-        }) );
+        });
         
-        MyApp.scopeDescription.push( Ext.create('Ext.panel.Panel', {
+        MyApp.scopePane.add( thisDetail );
+        
+        thisDescription = Ext.create('Ext.panel.Panel', {
             width: '100%',
             html: '<p>' + records[0].data.Description + '</p>',
             renderTo: Ext.getBody()
-        }) );
+        });
+
+        MyApp.scopePane.add( thisDescription );
     },
 
     _loadFeatureDetails: function() {    
-        Ext.create('Rally.data.WsapiDataStore', {
-            autoLoad: true,
+        thisStore = Ext.create('Rally.data.WsapiDataStore', {
             pageSize: 1,    // Load 1 page at a time
             limit: 1,       // Limit to 1
             
@@ -313,36 +310,30 @@
             },
             
             listeners: {
-                load: function( store, records ) {
-                    MyApp._writeFeatureDetails( store, records );
+                load: function( myStore, records ) {
+                    MyApp._writeFeatureDetails( myStore, records );
                     
                     // Load the next until all pages are loaded
-                    if ( store.currentPage < store.totalCount )
+                    if ( myStore.currentPage < myStore.totalCount )
                     {
-                        store.loadPage( store.currentPage+1 );
-                    }
-                    else
-                    {
-                        var index = 0;
-                        for (index=0; index< store.totalCount; index++ ){
-                            MyApp.featurePane.add(MyApp.featureDetails[index]);
-                            MyApp.featurePane.add(MyApp.featureDescription[index] );
-                        }
+                        ++MyApp.currentFeaturePage;
+                        MyApp._loadFeatureDetails();
                     }
                 }
             }
         });
+
+        thisStore.loadPage( MyApp.currentFeaturePage );
     },
     
     _writeFeatureDetails: function(myStore, records) {
         var title = records[0].data.Name;
 
-        MyApp.featureDetails.push( Ext.create('Rally.ui.grid.Grid', {
+        thisDetail = Ext.create('Rally.ui.grid.Grid', {
             store: myStore,
             border: 1,
             title: '<a href=\'' + Rally.nav.Manager.getDetailUrl( records[0] ) + '\'>' + title + '</a>',
             columnCfgs: [
-                'Name',
                 'PreliminaryEstimate',
                 'ValueScore',
                 'RiskScore',
@@ -351,13 +342,17 @@
                 'Release'
             ],
             showPagingToolbar: false            
-        }));
+        });
         
-        MyApp.featureDescription.push( Ext.create('Ext.panel.Panel', {
+        MyApp.featurePane.add( thisDetail );
+
+        thisDescription = Ext.create('Ext.panel.Panel', {
             width: '100%',
             html: '<p>' + records[0].data.Description + '</p>',
             renderTo: Ext.getBody()
-        }));
+        });
+
+        MyApp.featurePane.add( thisDescription );
     }    
 });
 
