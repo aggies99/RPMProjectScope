@@ -5,9 +5,12 @@ Ext.define('CustomApp', {
     launch: function() {
         MyApp = this;
         
+        MyApp.storeCopies = [];
         MyApp.epicList = [];
+        MyApp.currentScopePage = 1;
         MyApp.scopeDetails = [];
         MyApp.scopeDescription = [];
+        MyApp.currentFeaturePage = 1;
         MyApp.featureDetails = [];
         MyApp.featureDescription = [];
         
@@ -35,7 +38,7 @@ Ext.define('CustomApp', {
             
             context: MyApp.globalContext,
             
-            //fetch: ['Name' ],
+            fetch: ['Name' ],
                 
             sorters: {
                 property: 'Name',
@@ -43,8 +46,8 @@ Ext.define('CustomApp', {
             },
             
             listeners: {
-                load: function( store, records ) {
-                    console.log( store );
+                load: function( myStore, records ) {
+                    console.log( myStore );
                     var index=0;
                     for (index=0; index<records.length; index++) {
                         MyApp.epicList.push( records[index].data.Name );
@@ -116,6 +119,8 @@ Ext.define('CustomApp', {
     },
     
     _writeProgramDetails: function(myStore, records) {
+        MyApp.storeCopies.push( myStore );
+
         // Remove the combo box
         MyApp.programPane.remove(MyApp.combo);
 
@@ -169,8 +174,7 @@ Ext.define('CustomApp', {
     },
     
     _loadScopeDetails: function() {    
-        Ext.create('Rally.data.WsapiDataStore', {
-            autoLoad: true,
+        thisStore = Ext.create('Rally.data.WsapiDataStore', {
             pageSize: 1,    // Load 1 page at a time
             limit: 1,       // Limit to 1
             
@@ -202,18 +206,21 @@ Ext.define('CustomApp', {
             },
             
             listeners: {
-                load: function( store, records ) {
-                    MyApp._buildScopeDetails( store, records, store.currentPage-1 );
+                load: function( myStore, records ) {
+                    MyApp.storeCopies.push( myStore );
+
+                    MyApp._buildScopeDetails( myStore, records );
                     
                     // Load the next until all pages are loaded
-                    if ( store.currentPage < store.totalCount )
+                    if ( myStore.currentPage < myStore.totalCount )
                     {
-                       store.loadPage( store.currentPage+1 );
+                        ++MyApp.currentScopePage;
+                        MyApp._loadScopeDetails();
                     }
                     else
                     {
                         var index = 0;
-                        for (index=0; index< store.totalCount; index++ ){
+                        for (index=0; index< myStore.totalCount; index++ ){
                             MyApp.scopePane.add(MyApp.scopeDetails[index]);
                             MyApp.scopePane.add(MyApp.scopeDescription[index] );
                         }
@@ -237,6 +244,8 @@ Ext.define('CustomApp', {
                 }
             }
         });
+        
+        thisStore.loadPage( MyApp.currentScopePage );
     },
     
     _buildScopeDetails: function(myStore, records) {
@@ -271,8 +280,7 @@ Ext.define('CustomApp', {
     },
 
     _loadFeatureDetails: function() {    
-        Ext.create('Rally.data.WsapiDataStore', {
-            autoLoad: true,
+        thisStore = Ext.create('Rally.data.WsapiDataStore', {
             pageSize: 1,    // Load 1 page at a time
             limit: 1,       // Limit to 1
             
@@ -304,25 +312,34 @@ Ext.define('CustomApp', {
             },
             
             listeners: {
-                load: function( store, records ) {
-                    MyApp._writeFeatureDetails( store, records );
+                load: function( myStore, records ) {
+                    MyApp.storeCopies.push( myStore );
+
+                    MyApp._writeFeatureDetails( myStore, records );
                     
                     // Load the next until all pages are loaded
-                    if ( store.currentPage < store.totalCount )
+                    if ( myStore.currentPage < myStore.totalCount )
                     {
-                        store.loadPage( store.currentPage+1 );
+                        ++MyApp.currentFeaturePage;
+                        MyApp._loadFeatureDetails();
                     }
                     else
                     {
                         var index = 0;
-                        for (index=0; index< store.totalCount; index++ ){
+                        for (index=0; index< myStore.totalCount; index++ ){
                             MyApp.featurePane.add(MyApp.featureDetails[index]);
                             MyApp.featurePane.add(MyApp.featureDescription[index] );
+                        }
+                        
+                        for (index=0; index< MyApp.storeCopies.length; index++){
+                            console.log( MyApp.storeCopies[index] );
                         }
                     }
                 }
             }
         });
+
+        thisStore.loadPage( MyApp.currentFeaturePage );
     },
     
     _writeFeatureDetails: function(myStore, records) {
