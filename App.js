@@ -5,15 +5,10 @@ Ext.define('CustomApp', {
     launch: function() {
         MyApp = this;
         
-        MyApp.storeCopies = [];
         MyApp.epicList = [];
         MyApp.currentScopePage = 1;
-        MyApp.scopeDetails = [];
-        MyApp.scopeDescription = [];
         MyApp.currentFeaturePage = 1;
-        MyApp.featureDetails = [];
-        MyApp.featureDescription = [];
-        
+
         MyApp.globalContext = this.getContext().getDataContext();
 
         // Load the program list and create the program combobox
@@ -47,7 +42,7 @@ Ext.define('CustomApp', {
             
             listeners: {
                 load: function( myStore, records ) {
-                    console.log( myStore );
+                    //console.log( myStore );
                     var index=0;
                     for (index=0; index<records.length; index++) {
                         MyApp.epicList.push( records[index].data.Name );
@@ -119,7 +114,6 @@ Ext.define('CustomApp', {
     },
     
     _writeProgramDetails: function(myStore, records) {
-        MyApp.storeCopies.push( myStore );
 
         // Remove the combo box
         MyApp.programPane.remove(MyApp.combo);
@@ -207,8 +201,6 @@ Ext.define('CustomApp', {
             
             listeners: {
                 load: function( myStore, records ) {
-                    MyApp.storeCopies.push( myStore );
-
                     MyApp._buildScopeDetails( myStore, records );
                     
                     // Load the next until all pages are loaded
@@ -219,12 +211,6 @@ Ext.define('CustomApp', {
                     }
                     else
                     {
-                        var index = 0;
-                        for (index=0; index< myStore.totalCount; index++ ){
-                            MyApp.scopePane.add(MyApp.scopeDetails[index]);
-                            MyApp.scopePane.add(MyApp.scopeDescription[index] );
-                        }
-
                         MyApp.featurePane = Ext.create('Ext.container.Container', {
                             componentCls: 'inner'
                         });
@@ -256,12 +242,11 @@ Ext.define('CustomApp', {
             title = title.substr( epicTitle.length );
         }
 
-        MyApp.scopeDetails.push( Ext.create('Rally.ui.grid.Grid', {
+        thisDetail = Ext.create('Rally.ui.grid.Grid', {
             store: myStore,
             title: '<a href=\'' + Rally.nav.Manager.getDetailUrl( records[0] ) + '\'>' + title + '</a>',
             border: 1,
             columnCfgs: [
-                'Name',
                 {dataIndex: 'c_SAPProjectNumber', text:'SAP #'},
                 'InvestmentCategory',
                 'PlannedStartDate',
@@ -270,13 +255,17 @@ Ext.define('CustomApp', {
                 'Project'
             ],
             showPagingToolbar: false            
-        }) );
+        });
         
-        MyApp.scopeDescription.push( Ext.create('Ext.panel.Panel', {
+        MyApp.scopePane.add( thisDetail );
+        
+        thisDescription = Ext.create('Ext.panel.Panel', {
             width: '100%',
             html: '<p>' + records[0].data.Description + '</p>',
             renderTo: Ext.getBody()
-        }) );
+        });
+
+        MyApp.scopePane.add( thisDescription );
     },
 
     _loadFeatureDetails: function() {    
@@ -313,8 +302,6 @@ Ext.define('CustomApp', {
             
             listeners: {
                 load: function( myStore, records ) {
-                    MyApp.storeCopies.push( myStore );
-
                     MyApp._writeFeatureDetails( myStore, records );
                     
                     // Load the next until all pages are loaded
@@ -322,18 +309,6 @@ Ext.define('CustomApp', {
                     {
                         ++MyApp.currentFeaturePage;
                         MyApp._loadFeatureDetails();
-                    }
-                    else
-                    {
-                        var index = 0;
-                        for (index=0; index< myStore.totalCount; index++ ){
-                            MyApp.featurePane.add(MyApp.featureDetails[index]);
-                            MyApp.featurePane.add(MyApp.featureDescription[index] );
-                        }
-                        
-                        for (index=0; index< MyApp.storeCopies.length; index++){
-                            console.log( MyApp.storeCopies[index] );
-                        }
                     }
                 }
             }
@@ -345,12 +320,11 @@ Ext.define('CustomApp', {
     _writeFeatureDetails: function(myStore, records) {
         var title = records[0].data.Name;
 
-        MyApp.featureDetails.push( Ext.create('Rally.ui.grid.Grid', {
+        thisDetail = Ext.create('Rally.ui.grid.Grid', {
             store: myStore,
             border: 1,
             title: '<a href=\'' + Rally.nav.Manager.getDetailUrl( records[0] ) + '\'>' + title + '</a>',
             columnCfgs: [
-                'Name',
                 'PreliminaryEstimate',
                 'ValueScore',
                 'RiskScore',
@@ -359,12 +333,16 @@ Ext.define('CustomApp', {
                 'Release'
             ],
             showPagingToolbar: false            
-        }));
+        });
         
-        MyApp.featureDescription.push( Ext.create('Ext.panel.Panel', {
+        MyApp.featurePane.add( thisDetail );
+
+        thisDescription = Ext.create('Ext.panel.Panel', {
             width: '100%',
             html: '<p>' + records[0].data.Description + '</p>',
             renderTo: Ext.getBody()
-        }));
+        });
+
+        MyApp.featurePane.add( thisDescription );
     }    
 });
