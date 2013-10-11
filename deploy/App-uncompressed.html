@@ -14,11 +14,15 @@
     launch: function() {
         MyApp = this;
         
-        MyApp.epicList = [];
-        MyApp.currentScopePage = 1;
-        MyApp.currentFeaturePage = 1;
-
         MyApp.globalContext = this.getContext().getDataContext();
+
+        MyApp.epicList = [];
+        MyApp.psiList = [];
+
+        MyApp.undefinedPSI = "Unscheduled";
+        MyApp.psiList.push( MyApp.undefinedPSI );
+
+        MyApp.featurePerPSI = [];
 
         // Load the program list and create the program combobox
         MyApp._loadProgramList();
@@ -35,7 +39,7 @@
     },
     
     _loadProgramList: function() {
-        var thisIsMyStore = Ext.create('Rally.data.WsapiDataStore', {
+        Ext.create('Rally.data.WsapiDataStore', {
             autoLoad: true,
                 
             model: 'PortfolioItem/Epic',
@@ -127,8 +131,10 @@
         // Remove the combo box
         MyApp.programPane.remove(MyApp.combo);
 
+        // Save the title
         title = records[0].data.Name;
         
+        // Write the title panel
         MyApp.programName = Ext.create('Ext.panel.Panel', {
             width: '100%',
             html: '<p><h1><a href=\'' + Rally.nav.Manager.getDetailUrl( records[0] ) + '\' target=\'_top\'>' + title + '</a></h1></p>',
@@ -137,7 +143,8 @@
 
         MyApp.programPane.add( MyApp.programName );
 
-        MyApp.programDetails = Ext.create('Rally.ui.grid.Grid', {
+        // Create the detail grid
+        thisDetail = Ext.create('Rally.ui.grid.Grid', {
             store: myStore,
             border: 1,
             columnCfgs: [
@@ -150,33 +157,23 @@
             showPagingToolbar: false            
         });
 
-        MyApp.programPane.add(MyApp.programDetails);
+        // Add the detail grid
+        MyApp.programPane.add( thisDetail );
 
-        MyApp.programDescription = Ext.create('Ext.panel.Panel', {
+        // Create the description
+        thisDescription = Ext.create('Ext.panel.Panel', {
             width: '100%',
             html: '<p>' + records[0].data.Description + '</p>',
             renderTo: Ext.getBody()
         });
         
-        MyApp.programPane.add( MyApp.programDescription );
+        // Add the description
+        MyApp.programPane.add( thisDescription );
         
-        MyApp.scopePane = Ext.create('Ext.container.Container', {
-            componentCls: 'inner'
-        });
-        MyApp.add(MyApp._wrapComponent(MyApp.scopePane, 'scope'));
-
-        MyApp.scopeTotal = Ext.create('Ext.panel.Panel', {
-            width: '100%',
-            html: '<p><h2>Scope Summary</h2></p>',
-            renderTo: Ext.getBody()
-        });
-
-        MyApp.scopePane.add( MyApp.scopeTotal );
-
-        MyApp._loadScopeDetails();
+        MyApp._loadScopeDetails( 1 );
     },
     
-    _loadScopeDetails: function() {    
+    _loadScopeDetails: function( currentPage ) {    
         thisStore = Ext.create('Rally.data.WsapiDataStore', {
             pageSize: 1,    // Load 1 page at a time
             limit: 1,       // Limit to 1
@@ -210,47 +207,55 @@
             
             listeners: {
                 load: function( myStore, records ) {
-                    MyApp._buildScopeDetails( myStore, records );
-                    
-                    // Load the next until all pages are loaded
-                    if ( myStore.currentPage < myStore.totalCount )
-                    {
-                        ++MyApp.currentScopePage;
-                        MyApp._loadScopeDetails();
-                    }
-                    else
-                    {
-                        MyApp.featurePane = Ext.create('Ext.container.Container', {
-                            componentCls: 'inner'
-                        });
-                        MyApp.add(MyApp._wrapComponent(MyApp.featurePane, 'feature'));
-                
-                        MyApp.featureTotal = Ext.create('Ext.panel.Panel', {
-                            width: '100%',
-                            html: '<p><h2>Feature Summary by PSI</h2></p>',
-                            renderTo: Ext.getBody()
-                        });
-                
-                        MyApp.featurePane.add( MyApp.featureTotal );
 
-                        // Move to features
-                        MyApp._loadFeatureDetails();
+                    // If there are items, then parse them
+                    if ( myStore.totalCount > 0 ) {
+                        // Create the scope panel only when there is scope defined
+                        if ( 1 === myStore.currentPage ) {
+                            // Create the scope panel
+                            MyApp.scopePane = Ext.create('Ext.container.Container', {
+                                componentCls: 'inner'
+                            });
+                            MyApp.add(MyApp._wrapComponent(MyApp.scopePane, 'scope'));
+                    
+                            MyApp.scopeTotal = Ext.create('Ext.panel.Panel', {
+                                width: '100%',
+                                html: '<p><h2>Scope Summary</h2></p>',
+                                renderTo: Ext.getBody()
+                            });
+                    
+                            MyApp.scopePane.add( MyApp.scopeTotal );
+                        }
+                        
+                        MyApp._buildScopeDetails( myStore, records );
+                        
+                        // Load the next until all pages are loaded
+                        if ( myStore.currentPage < myStore.totalCount )
+                        {
+                            MyApp._loadScopeDetails( myStore.currentPage+1 );
+                        }
+                        else
+                        {
+                            // Move to features
+                            MyApp._loadFeatureDetails( 1 );
+                        }
                     }
                 }
             }
         });
         
-        thisStore.loadPage( MyApp.currentScopePage );
+        thisStore.loadPage( currentPage );
     },
     
     _buildScopeDetails: function(myStore, records) {
         // Filter off the epic from the scope title
-        var epicTitle = MyApp.selectedEpicName + ': ';
-        var title = records[0].data.Name;
+        epicTitle = MyApp.selectedEpicName + ': ';
+        title = records[0].data.Name;
         if ( 0 === title.indexOf( epicTitle ) ) {
             title = title.substr( epicTitle.length );
         }
 
+        // Create the detail grid
         thisDetail = Ext.create('Rally.ui.grid.Grid', {
             store: myStore,
             title: '<a href=\'' + Rally.nav.Manager.getDetailUrl( records[0] ) + '\' target=\'_top\'>' + title + '</a>',
@@ -277,7 +282,7 @@
         MyApp.scopePane.add( thisDescription );
     },
 
-    _loadFeatureDetails: function() {    
+    _loadFeatureDetails: function( currentPage ) {    
         thisStore = Ext.create('Rally.data.WsapiDataStore', {
             pageSize: 1,    // Load 1 page at a time
             limit: 1,       // Limit to 1
@@ -305,41 +310,64 @@
                 ],
 
             sorters: {
-                property: 'Release',
+                property: 'Rank',
                 direction: 'ASC'
             },
             
             listeners: {
                 load: function( myStore, records ) {
-                    MyApp._writeFeatureDetails( myStore, records );
+
+                    // If there are items, then parse them
+                    if ( myStore.totalCount > 0 ) {
+                        // Create the feature panel only when there is scope defined
+                        if ( 1 === myStore.currentPage ) {
+                            MyApp.featurePane = Ext.create('Ext.container.Container', {
+                                componentCls: 'inner'
+                            });
+                            MyApp.add(MyApp._wrapComponent(MyApp.featurePane, 'feature'));
                     
-                    // Load the next until all pages are loaded
-                    if ( myStore.currentPage < myStore.totalCount )
-                    {
-                        ++MyApp.currentFeaturePage;
-                        MyApp._loadFeatureDetails();
+                            MyApp.featureTotal = Ext.create('Ext.panel.Panel', {
+                                width: '100%',
+                                html: '<p><h2>Feature Summary</h2></p>',
+                                renderTo: Ext.getBody()
+                            });
+                    
+                            MyApp.featurePane.add( MyApp.featureTotal );
+                        }
+                        
+                        MyApp._writeFeatureDetails( myStore, records );
+                        
+                        // Load the next until all pages are loaded
+                        if ( myStore.currentPage < myStore.totalCount )
+                        {
+                            MyApp._loadFeatureDetails( myStore.currentPage+1 );
+                        }
+                        else {
+                            MyApp._writePSIRoadmap();
+                        }
                     }
                 }
             }
         });
 
-        thisStore.loadPage( MyApp.currentFeaturePage );
+        thisStore.loadPage( currentPage );
     },
     
     _writeFeatureDetails: function(myStore, records) {
         var title = records[0].data.Name;
+        var url = Rally.nav.Manager.getDetailUrl( records[0] );
+        var release = records[0].data.Release;
 
         thisDetail = Ext.create('Rally.ui.grid.Grid', {
             store: myStore,
             border: 1,
-            title: '<a href=\'' + Rally.nav.Manager.getDetailUrl( records[0] ) + '\' target=\'_top\'>' + title + '</a>',
+            title: '<a href=\'' + url + '\' target=\'_top\'>' + title + '</a>',
             columnCfgs: [
                 'PreliminaryEstimate',
                 'ValueScore',
                 'RiskScore',
                 'Project',
-                'LastUpdateDate',
-                'Release'
+                'LastUpdateDate'
             ],
             showPagingToolbar: false            
         });
@@ -353,7 +381,78 @@
         });
 
         MyApp.featurePane.add( thisDescription );
-    }    
+        
+        MyApp._updatePSIRoadmap( title, url, release );
+    },
+    
+    _updatePSIRoadmap: function( featureName, url, release ) {
+
+        // Look for the release name, assuming it is undefined to start
+        releaseName = MyApp.undefinedPSI;
+        if ( null !== release ) releaseName = release.Name;
+        
+        if ( MyApp._findIndex( releaseName, MyApp.psiList ) < 0 ) {
+            MyApp.psiList.push( releaseName );
+        }
+        
+        featureObjective = '<a href=\'' + url + '\' target=\'_top\'>' + featureName + '</a><br>';
+        
+        // Push the release and objective link to the list
+        MyApp.featurePerPSI.push( [ releaseName, featureObjective ] );
+    },
+    
+    _writePSIRoadmap: function() {
+        MyApp.roadmapPane = Ext.create('Ext.container.Container', {
+            componentCls: 'inner'
+        });
+        MyApp.add(MyApp._wrapComponent(MyApp.roadmapPane, 'roadmap'));
+
+        MyApp.featureRoadmap = Ext.create('Ext.panel.Panel', {
+            width: '100%',
+            html: '<p><h2>Feature Roadmap</h2></p>',
+            renderTo: Ext.getBody()
+        });
+
+        MyApp.roadmapPane.add( MyApp.featureRoadmap );
+
+        MyApp.psiList.sort();
+        
+        for ( var psiIndex=0; psiIndex<MyApp.psiList.length; psiIndex++ ) {
+            var psiName = MyApp.psiList[psiIndex];
+
+            insideHtml = '';
+
+            // Loop through looking for matches
+            for ( var index=0; index<MyApp.featurePerPSI.length; index++ ) {
+                if ( MyApp.featurePerPSI[index][0] === psiName ) {
+                    // Append to the inside HTML
+                    insideHtml += MyApp.featurePerPSI[index][1];
+                }
+            }
+
+            psiPanel  = Ext.create('Ext.panel.Panel', {
+                title: '<p><h2>' + psiName + '</h2></p>',
+                width: '100%',
+                html: insideHtml,
+                renderTo: Ext.getBody()
+            });
+            
+            MyApp.roadmapPane.add( psiPanel );
+            
+        }
+    },
+    
+	_findIndex: function (value, listOfValues) {
+		var retVal = -1;
+
+		for (var i = 0; i < listOfValues.length; i++) {
+			if (listOfValues[i] == value) {
+				retVal = i;
+				break;
+			}
+		}
+		return retVal;
+	}
 });
 
 
@@ -386,6 +485,11 @@
 }
 
 .feature {
+    float: left;
+    width: 100%;
+}
+
+.roadmap {
     float: left;
     width: 100%;
 }
