@@ -52,6 +52,7 @@ Ext.define('CustomApp', {
                         MyApp.epicList.push( records[index].data.Name );
                     }
                     MyApp._drawComboBox();
+                    //MyApp.combo.setValue(MyApp.epicList[0]);
                 }
             }
         });
@@ -358,7 +359,8 @@ Ext.define('CustomApp', {
                 'ValueScore',
                 'RiskScore',
                 'Project',
-                'LastUpdateDate'
+                'LastUpdateDate',
+                'Release'
             ],
             showPagingToolbar: false            
         });
@@ -389,10 +391,11 @@ Ext.define('CustomApp', {
         featureObjective = '<a href=\'' + url + '\' target=\'_top\'>' + featureName + '</a><br>';
         
         // Push the release and objective link to the list
-        MyApp.featurePerPSI.push( [ releaseName, featureObjective ] );
+        MyApp.featurePerPSI.push( { Release: releaseName, Feature: featureObjective } );
     },
     
     _writePSIRoadmap: function() {
+        
         MyApp.roadmapPane = Ext.create('Ext.container.Container', {
             componentCls: 'inner'
         });
@@ -405,9 +408,11 @@ Ext.define('CustomApp', {
         });
 
         MyApp.roadmapPane.add( MyApp.featureRoadmap );
-
-        MyApp.psiList.sort();
         
+        colWidth = ( parseFloat( MyApp.featureRoadmap.width ) / MyApp.psiList.length ) + '%';
+        console.log( parseFloat(MyApp.featureRoadmap.width), colWidth );
+        
+        MyApp.psiList.sort();
         for ( var psiIndex=0; psiIndex<MyApp.psiList.length; psiIndex++ ) {
             var psiName = MyApp.psiList[psiIndex];
 
@@ -415,17 +420,18 @@ Ext.define('CustomApp', {
 
             // Loop through looking for matches
             for ( var index=0; index<MyApp.featurePerPSI.length; index++ ) {
-                if ( MyApp.featurePerPSI[index][0] === psiName ) {
+                if ( MyApp.featurePerPSI[index].Release === psiName ) {
                     // Append to the inside HTML
-                    insideHtml += MyApp.featurePerPSI[index][1];
+                    insideHtml += MyApp.featurePerPSI[index].Feature;
                 }
             }
 
             psiPanel  = Ext.create('Ext.panel.Panel', {
                 title: '<p><h2>' + psiName + '</h2></p>',
-                width: '100%',
+                width: colWidth,
                 html: insideHtml,
-                renderTo: Ext.getBody()
+                renderTo: Ext.getBody(),
+                componentCls: 'psi'
             });
             
             MyApp.roadmapPane.add( psiPanel );
@@ -443,5 +449,18 @@ Ext.define('CustomApp', {
 			}
 		}
 		return retVal;
-	}
+	},
+	
+    _getPageWidth: function() {
+        if (self.innerWidth) {
+           return self.innerWidth;
+        }
+        else if (document.documentElement && document.documentElement.clientHeight){
+            return document.documentElement.clientWidth;
+        }
+        else if (document.body) {
+            return document.body.clientWidth;
+        }
+        return 0;
+    }
 });
